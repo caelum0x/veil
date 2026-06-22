@@ -1,0 +1,25 @@
+# Rust's output directory
+target
+test_snapshots
+# circuits build
+circuits/build
+circuits/output
+circuits/input
+circuits/test/node_modules
+circuits/*.wtns
+circuits/test/*.wtns
+circuits/test/*.wtns.json
+# Node / JS app + services
+node_modules
+app/dist
+services/relayer/dist
+# Deployment manifests are committed; runtime working state is not
+deployments/.work
+deployments/state-*.json
+# Local settings
+.soroban
+.stellar
+.vscode
+.env
+# Agents
+.claude

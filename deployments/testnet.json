@@ -1,0 +1,23 @@
+{
+  "network": "testnet",
+  "token": "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC",
+  "admin": "GBWNJFSGF2MLGY5NSY4ICHJHVBG4MWKYRMS7WCPCWVNQSLJ3CZLKC473",
+  "adminIdentity": "veil_admin",
+  "pools": [
+    {
+      "contractId": "CDSVDEXOELYF3NGPPRFXIM6OWTKO2PLOYUEPX7SYKRYYMLVCMNCYTHZH",
+      "denom": 1000000000,
+      "scope": "veil_pool_1000000000"
+    },
+    {
+      "contractId": "CDBBAVID6ULSNFSOG2QDCSHKLXMWO7MELN5RKYBSQKF2OJTKSNMMOFXR",
+      "denom": 10000000000,
+      "scope": "veil_pool_10000000000"
+    },
+    {
+      "contractId": "CBJHXCUYU7UOY4YMB2SNIOIO265R6APAZJA7N3ASCS4SVYMBPOWWGLXS",
+      "denom": 100000000000,
+      "scope": "veil_pool_100000000000"
+    }
+  ]
+}
