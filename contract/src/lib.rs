@@ -7,7 +7,9 @@ use soroban_sdk::{
     Symbol, Vec,
 };
 
-use lean_imt::{LeanIMT, TREE_DEPTH_KEY, TREE_LEAVES_KEY, TREE_ROOT_KEY};
+// TREE_LEAVES_KEY now holds the incremental tree's frontier (not the full leaf set),
+// TREE_DEPTH_KEY holds the next-leaf index, TREE_ROOT_KEY holds the current root.
+use lean_imt::{IncrementalMerkleTree, TREE_DEPTH_KEY, TREE_LEAVES_KEY, TREE_ROOT_KEY};
 use zk::{Groth16Verifier, Proof, PublicSignals, VerificationKey};
 
 mod events;
@@ -92,11 +94,11 @@ impl PrivacyPoolsContract {
         let denom = if denom > 0 { denom } else { DEFAULT_DENOM };
         env.storage().instance().set(&DENOM_KEY, &denom);
 
-        // Initialize empty merkle tree with fixed depth
-        let tree = LeanIMT::new(env, TREE_DEPTH);
-        let (leaves, depth, root) = tree.to_storage();
-        env.storage().instance().set(&TREE_LEAVES_KEY, &leaves);
-        env.storage().instance().set(&TREE_DEPTH_KEY, &depth);
+        // Initialize the incremental merkle tree (frontier + next_index + root).
+        let tree = IncrementalMerkleTree::new(env, TREE_DEPTH);
+        let (frontier, next_index, root) = tree.to_storage();
+        env.storage().instance().set(&TREE_LEAVES_KEY, &frontier);
+        env.storage().instance().set(&TREE_DEPTH_KEY, &next_index);
         env.storage().instance().set(&TREE_ROOT_KEY, &root);
 
         // Seed the root-history window with the initial (empty-tree) root so the very
@@ -113,30 +115,29 @@ impl PrivacyPoolsContract {
     /// # Returns
     /// * A Result containing a tuple of (updated_merkle_root, leaf_index) after insertion
     fn store_commitment(env: &Env, commitment: BytesN<32>) -> Result<(BytesN<32>, u32), Error> {
-        // Load current tree state
-        let leaves: Vec<BytesN<32>> = env
+        // Load the persisted frontier + index + root (seeded in the constructor).
+        let frontier: Vec<BytesN<32>> = env
             .storage()
             .instance()
             .get(&TREE_LEAVES_KEY)
             .unwrap_or(vec![&env]);
-        let depth: u32 = env.storage().instance().get(&TREE_DEPTH_KEY).unwrap_or(0);
+        let next_index: u32 = env.storage().instance().get(&TREE_DEPTH_KEY).unwrap_or(0);
         let root: BytesN<32> = env
             .storage()
             .instance()
             .get(&TREE_ROOT_KEY)
             .unwrap_or(BytesN::from_array(&env, &[0u8; 32]));
 
-        // Create tree and insert new commitment
-        let mut tree = LeanIMT::from_storage(env, leaves, depth, root);
-        tree.insert(commitment).map_err(|_| Error::TreeAtCapacity)?;
-
-        // Get the leaf index (it's the last leaf in the tree)
-        let leaf_index = tree.get_leaf_count() - 1;
+        // O(depth) frontier insert — no full-tree rebuild, so cost is constant per
+        // deposit regardless of how many leaves the pool already holds.
+        let mut tree =
+            IncrementalMerkleTree::from_storage(env, TREE_DEPTH, frontier, next_index, root);
+        let leaf_index = tree.insert(commitment).map_err(|_| Error::TreeAtCapacity)?;
 
         // Store updated tree state
-        let (new_leaves, new_depth, new_root) = tree.to_storage();
-        env.storage().instance().set(&TREE_LEAVES_KEY, &new_leaves);
-        env.storage().instance().set(&TREE_DEPTH_KEY, &new_depth);
+        let (new_frontier, new_index, new_root) = tree.to_storage();
+        env.storage().instance().set(&TREE_LEAVES_KEY, &new_frontier);
+        env.storage().instance().set(&TREE_DEPTH_KEY, &new_index);
         env.storage().instance().set(&TREE_ROOT_KEY, &new_root);
 
         // Record the new root so proofs generated against it remain valid for a window
@@ -339,27 +340,21 @@ impl PrivacyPoolsContract {
         root_history::all(env)
     }
 
-    /// Gets the current depth of the merkle tree
-    pub fn get_merkle_depth(env: &Env) -> u32 {
+    /// Gets the fixed depth of the merkle tree.
+    pub fn get_merkle_depth(_env: &Env) -> u32 {
+        TREE_DEPTH
+    }
+
+    /// Gets the number of commitments deposited (the next-leaf index).
+    pub fn get_commitment_count(env: &Env) -> u32 {
         env.storage().instance().get(&TREE_DEPTH_KEY).unwrap_or(0)
     }
 
-    /// Gets the number of commitments (leaves) in the merkle tree
-    pub fn get_commitment_count(env: &Env) -> u32 {
-        let leaves: Vec<BytesN<32>> = env
-            .storage()
-            .instance()
-            .get(&TREE_LEAVES_KEY)
-            .unwrap_or(vec![&env]);
-        leaves.len() as u32
-    }
-
-    /// Gets all commitments (leaves) in the merkle tree
+    /// The incremental tree stores only its frontier on-chain, not the full leaf set,
+    /// so individual commitments are not retrievable from the contract. Off-chain
+    /// indexers reconstruct them from `deposit` events. Returns an empty vector.
     pub fn get_commitments(env: &Env) -> Vec<BytesN<32>> {
-        env.storage()
-            .instance()
-            .get(&TREE_LEAVES_KEY)
-            .unwrap_or(vec![env])
+        vec![env]
     }
 
     pub fn get_nullifiers(env: &Env) -> Vec<BytesN<32>> {

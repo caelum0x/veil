@@ -152,15 +152,23 @@ Honest disclosure (this is a hackathon prototype):
   upstream, and is explicitly not a reference-grade implementation.
 - **Trusted setup.** Groth16 needs a trusted setup; the testnet keys here come from a
   single-contributor ceremony. A real deployment needs a proper multi-party ceremony.
-- **No root history.** The contract stores only the current Merkle root, so a
-  withdrawal proof must be generated against the latest state. Concurrent deposits can
-  invalidate an in-flight proof (regenerate and retry). Adding a root-history ring
-  buffer is the obvious next step.
 - **Withdrawal fee / recipient binding.** The recipient currently signs and pays the
   (tiny) withdrawal fee. A fee-paying relayer that submits on the recipient's behalf
   requires binding the recipient into the proof (a circuit change); this is on the
   roadmap and would also let a brand-new, unfunded account receive privately.
 - **Self-issued test token by default.** Pools use the XLM SAC on testnet for the demo.
+
+### Resolved
+
+- **Root history.** The contract keeps a 30-root history window
+  (`contract/src/root_history.rs`); a withdrawal proof verifies against any recent
+  root, so deposits landing between proving and submission no longer invalidate it.
+- **Deposit scalability.** The Merkle tree uses a frontier-based incremental insert
+  (`libs/lean-imt/src/incremental.rs`, the Tornado `MerkleTreeWithHistory` algorithm):
+  every deposit costs O(depth) hashes regardless of how full the pool is. The earlier
+  implementation rebuilt the whole tree per deposit and hit Soroban's CPU budget on the
+  2nd deposit; pools now scale to a full anonymity set. Verified on testnet with
+  multi-deposit + withdraw (`scripts/e2e-multi.sh`).
 
 ---
 

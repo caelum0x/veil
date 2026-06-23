@@ -282,3 +282,166 @@ footer {
   font-family: ui-monospace, monospace;
   color: var(--muted);
 }
+
+/* ---- Multi-page layout ---- */
+.shell {
+  max-width: 880px;
+}
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.nav .brand {
+  cursor: pointer;
+  font-size: 18px;
+}
+.nav-links {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+}
+.nav-link {
+  padding: 7px 12px;
+  border-radius: 8px;
+  color: var(--muted);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+}
+.nav-link:hover {
+  color: var(--ink);
+}
+.nav-link.active {
+  color: var(--ink);
+  background: var(--panel-2);
+}
+.page h1 {
+  font-size: 22px;
+  margin: 0 0 4px;
+}
+.page .muted {
+  margin-top: 0;
+}
+.health-row {
+  display: flex;
+  gap: 8px;
+  margin: 14px 0;
+}
+.pill {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+}
+.pill.ok {
+  color: var(--ok);
+  border-color: rgba(40, 224, 176, 0.4);
+}
+.pill.bad {
+  color: var(--err);
+  border-color: rgba(255, 107, 107, 0.4);
+}
+.pool-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+.pool-card {
+  text-align: left;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px;
+  cursor: pointer;
+  color: var(--ink);
+}
+.pool-card:hover {
+  border-color: var(--accent);
+}
+.pool-card-denom {
+  font-size: 18px;
+  font-weight: 700;
+}
+.pool-card-stats {
+  display: flex;
+  gap: 14px;
+  margin: 8px 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+.pool-card-cid {
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  color: var(--muted);
+}
+table.kv {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 14px 0;
+  font-size: 14px;
+}
+table.kv td,
+table.kv th {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+}
+table.kv td:first-child {
+  color: var(--muted);
+  width: 45%;
+}
+table.kv .mono {
+  font-family: ui-monospace, monospace;
+}
+.note-actions {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.note-actions button,
+.row-actions button,
+.filebtn {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 12px;
+}
+.note-actions .danger,
+button.danger {
+  color: var(--err);
+}
+.row-actions {
+  display: flex;
+  gap: 8px;
+  margin: 16px 0;
+  flex-wrap: wrap;
+}
+.primary.small {
+  width: auto;
+  padding: 8px 14px;
+  margin: 12px 0;
+  font-size: 13px;
+}
+.back {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 10px;
+}
+.field {
+  margin-bottom: 12px;
+}
+.filebtn {
+  display: inline-block;
+}

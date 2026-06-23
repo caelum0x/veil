@@ -15,11 +15,19 @@ import {
   signTransaction,
 } from "@stellar/freighter-api";
 import { Buffer } from "buffer";
+import { getSettings } from "./settings.ts";
 
-const RPC_URL = import.meta.env.VITE_RPC_URL ?? "https://soroban-testnet.stellar.org";
-const NETWORK_PASSPHRASE = Networks.TESTNET;
+function networkPassphrase(): string {
+  const net = getSettings().network;
+  if (net === "mainnet") return Networks.PUBLIC;
+  if (net === "futurenet") return Networks.FUTURENET;
+  return Networks.TESTNET;
+}
 
-export const server = new rpc.Server(RPC_URL);
+/** RPC server for the currently-configured network. */
+export function getServer(): rpc.Server {
+  return new rpc.Server(getSettings().rpcUrl);
+}
 
 /** Connects Freighter and returns the user's public key. */
 export async function connectWallet(): Promise<string> {
@@ -66,6 +74,8 @@ export async function invoke(
   args: xdr.ScVal[],
   signer: string,
 ): Promise<InvokeResult> {
+  const server = getServer();
+  const NETWORK_PASSPHRASE = networkPassphrase();
   const account = await server.getAccount(signer);
   const op = new Contract(contractId).call(method, ...args);
   const built = new TransactionBuilder(account, {

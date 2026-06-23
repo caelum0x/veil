@@ -6,6 +6,9 @@ use soroban_sdk::{
     crypto::bls12_381::Fr as BlsScalar, symbol_short, vec, BytesN, Env, Map, Symbol, Vec, U256,
 };
 
+pub mod incremental;
+pub use incremental::IncrementalMerkleTree;
+
 /// Storage keys for the LeanIMT
 pub const TREE_ROOT_KEY: Symbol = symbol_short!("root");
 pub const TREE_DEPTH_KEY: Symbol = symbol_short!("depth");
@@ -454,21 +457,6 @@ impl LeanIMT {
         } else {
             Some(self.compute_node_at_level(index, level))
         }
-    }
-
-    /// Gets the sibling of a node at a specific level and index
-    pub fn get_sibling(&self, level: u32, index: u32) -> Option<BytesN<32>> {
-        if level > self.depth {
-            return None;
-        }
-
-        if level == self.depth {
-            return None;
-        }
-
-        let sibling_index = if index % 2 == 0 { index + 1 } else { index - 1 };
-
-        self.get_node(level, sibling_index)
     }
 
     /// Demonstrates the "Clever shortcut 2" optimization concept

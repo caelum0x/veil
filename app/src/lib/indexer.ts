@@ -1,4 +1,4 @@
-const INDEXER_URL = import.meta.env.VITE_INDEXER_URL ?? "http://localhost:8789";
+import { getSettings } from "./settings.ts";
 
 export interface PoolSnapshot {
   contractId: string;
@@ -20,13 +20,26 @@ export interface Stats {
   totalLocked: string;
 }
 
+function indexer(): string {
+  return getSettings().indexerUrl;
+}
+
 /** Reads aggregate + per-pool stats from the indexer. Returns null if unreachable. */
 export async function getStats(): Promise<Stats | null> {
   try {
-    const res = await fetch(`${INDEXER_URL}/api/stats`);
+    const res = await fetch(`${indexer()}/api/stats`);
     if (!res.ok) return null;
     return (await res.json()) as Stats;
   } catch {
     return null;
+  }
+}
+
+export async function indexerHealth(): Promise<boolean> {
+  try {
+    const res = await fetch(`${indexer()}/api/health`);
+    return res.ok;
+  } catch {
+    return false;
   }
 }

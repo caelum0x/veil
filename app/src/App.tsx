@@ -1,54 +1,43 @@
-import { useState } from "react";
-import { usePools } from "./hooks/usePools.ts";
+import { useRoute, parseRoute } from "./lib/router.ts";
 import { useWallet } from "./hooks/useWallet.ts";
-import type { Tab } from "./types.ts";
-import { WalletButton } from "./components/WalletButton.tsx";
-import { DepositPanel } from "./components/DepositPanel.tsx";
-import { WithdrawPanel } from "./components/WithdrawPanel.tsx";
-import { PoolStats } from "./components/PoolStats.tsx";
+import { NavBar } from "./components/NavBar.tsx";
+import { Dashboard } from "./pages/Dashboard.tsx";
+import { DepositPage } from "./pages/DepositPage.tsx";
+import { WithdrawPage } from "./pages/WithdrawPage.tsx";
+import { PoolsPage } from "./pages/PoolsPage.tsx";
+import { PoolDetailPage } from "./pages/PoolDetailPage.tsx";
+import { NotesPage } from "./pages/NotesPage.tsx";
+import { SettingsPage } from "./pages/SettingsPage.tsx";
 
 export function App() {
-  const { pools, network } = usePools();
+  const route = useRoute();
   const { address, connect } = useWallet();
-  const [tab, setTab] = useState<Tab>("deposit");
+  const { page, params } = parseRoute(route);
+
+  function renderPage() {
+    switch (page) {
+      case "deposit":
+        return <DepositPage />;
+      case "withdraw":
+        return <WithdrawPage />;
+      case "pools":
+        return params[0] ? <PoolDetailPage denom={Number(params[0])} /> : <PoolsPage />;
+      case "notes":
+        return <NotesPage />;
+      case "settings":
+        return <SettingsPage />;
+      case "dashboard":
+      default:
+        return <Dashboard />;
+    }
+  }
 
   return (
     <div className="shell">
-      <header>
-        <div className="brand">
-          <span className="logo">◈</span> Veil
-          <span className="tagline">private stablecoin pools on Stellar</span>
-        </div>
-        <WalletButton address={address} onConnect={connect} />
-      </header>
-
-      <main>
-        <div className="tabs">
-          <button className={tab === "deposit" ? "active" : ""} onClick={() => setTab("deposit")}>
-            Deposit
-          </button>
-          <button className={tab === "withdraw" ? "active" : ""} onClick={() => setTab("withdraw")}>
-            Withdraw
-          </button>
-          <button className={tab === "pools" ? "active" : ""} onClick={() => setTab("pools")}>
-            Pools
-          </button>
-        </div>
-
-        {pools.length === 0 && tab !== "pools" && (
-          <p className="warn">
-            No pools loaded. Start the relayer and deploy pools (<code>scripts/deploy-pools.sh</code>).
-          </p>
-        )}
-
-        {tab === "deposit" && <DepositPanel pools={pools} address={address} onNeedWallet={connect} />}
-        {tab === "withdraw" && <WithdrawPanel pools={pools} address={address} onNeedWallet={connect} />}
-        {tab === "pools" && <PoolStats />}
-      </main>
-
+      <NavBar route={route} address={address} onConnect={connect} />
+      <main>{renderPage()}</main>
       <footer>
-        network: <strong>{network}</strong> · ZK: Groth16 / BLS12-381 verified on-chain · proofs never reveal which
-        deposit funded a withdrawal
+        Veil · Groth16 / BLS12-381 verified on-chain · withdrawals reveal the pool, never the funding deposit
       </footer>
     </div>
   );
