@@ -23,3 +23,5 @@ deployments/state-*.json
 .env
 # Agents
 .claude
+.gstack/
+.vercel

@@ -5,7 +5,7 @@ export function SettingsPage() {
   const [form, setForm] = useState<AppSettings>(() => ({ ...getSettings() }));
   const [saved, setSaved] = useState(false);
 
-  function update(key: keyof AppSettings, value: string) {
+  function update(key: keyof AppSettings, value: string | boolean) {
     setForm((f) => ({ ...f, [key]: value }));
     setSaved(false);
   }
@@ -34,10 +34,33 @@ export function SettingsPage() {
       <p className="muted">Point the dapp at your relayer, indexer, and RPC endpoint. Stored in this browser.</p>
 
       <div className="card">
+        <div className="toggle-row">
+          <div>
+            <label>Demo mode</label>
+            <p className="hint" style={{ margin: 0 }}>
+              Run fully in-browser with simulated pools and proofs — no relayer or deployed contracts needed. Turn off to
+              use the endpoints below.
+            </p>
+          </div>
+          <button
+            className={form.demo ? "switch on" : "switch"}
+            role="switch"
+            aria-checked={form.demo}
+            onClick={() => update("demo", !form.demo)}
+          >
+            <span className="knob" />
+          </button>
+        </div>
+
         {fields.map((f) => (
           <div key={f.key} className="field">
             <label>{f.label}</label>
-            <input value={form[f.key]} placeholder={f.placeholder} onChange={(e) => update(f.key, e.target.value)} />
+            <input
+              value={String(form[f.key])}
+              placeholder={f.placeholder}
+              disabled={form.demo}
+              onChange={(e) => update(f.key, e.target.value)}
+            />
           </div>
         ))}
         <div className="row-actions">

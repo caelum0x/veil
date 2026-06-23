@@ -17,6 +17,20 @@ Built for **Stellar Hacks: Real-World ZK**.
 
 ---
 
+## Demo
+
+- **Live demo (in-browser, no setup):** https://stellar-zk.vercel.app
+- **Walkthrough video:** [▶ watch the 50s demo](https://github.com/caelum0x/veil/blob/main/docs/veil-demo.mp4)
+  (direct MP4: https://github.com/caelum0x/veil/raw/main/docs/veil-demo.mp4 ·
+  also served live at https://stellar-zk.vercel.app/veil-demo.mp4)
+
+The live demo runs in **demo mode**: pools, zero-knowledge proofs, and transactions are
+simulated entirely in your browser so the full deposit → secret note → withdraw flow works
+with no relayer, indexer, or deployed contracts. Toggle demo mode off in **Settings** to point
+the dapp at a real relayer/indexer/RPC (set `VITE_DEMO=false` at build time to default it off).
+
+---
+
 ## Built on prior work
 
 Veil builds directly on [`ymcrcat/soroban-privacy-pools`](https://github.com/ymcrcat/soroban-privacy-pools),

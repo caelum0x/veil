@@ -1,4 +1,5 @@
 import { getSettings } from "./settings.ts";
+import { demoEnabled, demoStats } from "./demo.ts";
 
 export interface PoolSnapshot {
   contractId: string;
@@ -26,6 +27,7 @@ function indexer(): string {
 
 /** Reads aggregate + per-pool stats from the indexer. Returns null if unreachable. */
 export async function getStats(): Promise<Stats | null> {
+  if (demoEnabled()) return demoStats() as Stats;
   try {
     const res = await fetch(`${indexer()}/api/stats`);
     if (!res.ok) return null;
@@ -36,6 +38,7 @@ export async function getStats(): Promise<Stats | null> {
 }
 
 export async function indexerHealth(): Promise<boolean> {
+  if (demoEnabled()) return true;
   try {
     const res = await fetch(`${indexer()}/api/health`);
     return res.ok;

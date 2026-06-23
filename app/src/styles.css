@@ -445,3 +445,81 @@ button.danger {
 .filebtn {
   display: inline-block;
 }
+
+/* Demo banner */
+.demo-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 20px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  color: var(--accent-2);
+  background: rgba(40, 224, 176, 0.08);
+  border: 1px solid rgba(40, 224, 176, 0.28);
+  cursor: pointer;
+}
+.demo-banner .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--accent-2);
+  box-shadow: 0 0 0 0 rgba(40, 224, 176, 0.6);
+  animation: pulse 2s infinite;
+  flex: none;
+}
+.demo-banner .demo-cta {
+  margin-left: auto;
+  color: var(--muted);
+  font-weight: 600;
+}
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(40, 224, 176, 0.5); }
+  70% { box-shadow: 0 0 0 6px rgba(40, 224, 176, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(40, 224, 176, 0); }
+}
+
+/* Settings toggle switch */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 16px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+.switch {
+  flex: none;
+  width: 48px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  cursor: pointer;
+  padding: 0;
+  position: relative;
+  transition: background 0.15s;
+}
+.switch .knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--muted);
+  transition: transform 0.15s, background 0.15s;
+}
+.switch.on {
+  background: rgba(40, 224, 176, 0.2);
+  border-color: var(--accent-2);
+}
+.switch.on .knob {
+  transform: translateX(20px);
+  background: var(--accent-2);
+}
+input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

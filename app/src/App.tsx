@@ -1,5 +1,7 @@
 import { useRoute, parseRoute } from "./lib/router.ts";
 import { useWallet } from "./hooks/useWallet.ts";
+import { getSettings } from "./lib/settings.ts";
+import { navigate } from "./lib/router.ts";
 import { NavBar } from "./components/NavBar.tsx";
 import { Dashboard } from "./pages/Dashboard.tsx";
 import { DepositPage } from "./pages/DepositPage.tsx";
@@ -32,9 +34,17 @@ export function App() {
     }
   }
 
+  const demo = getSettings().demo;
+
   return (
     <div className="shell">
       <NavBar route={route} address={address} onConnect={connect} />
+      {demo && (
+        <div className="demo-banner" onClick={() => navigate("/settings")} role="button">
+          <span className="dot" /> Demo mode — pools, proofs, and transactions are simulated in your browser. No backend
+          required. <span className="demo-cta">Configure →</span>
+        </div>
+      )}
       <main>{renderPage()}</main>
       <footer>
         Veil · Groth16 / BLS12-381 verified on-chain · withdrawals reveal the pool, never the funding deposit

@@ -16,6 +16,14 @@ import {
 } from "@stellar/freighter-api";
 import { Buffer } from "buffer";
 import { getSettings } from "./settings.ts";
+import {
+  demoEnabled,
+  demoDelay,
+  demoRecordDeposit,
+  demoRecordWithdraw,
+  demoPools,
+  DEMO_ADDRESS,
+} from "./demo.ts";
 
 function networkPassphrase(): string {
   const net = getSettings().network;
@@ -31,6 +39,7 @@ export function getServer(): rpc.Server {
 
 /** Connects Freighter and returns the user's public key. */
 export async function connectWallet(): Promise<string> {
+  if (demoEnabled()) return demoDelay(DEMO_ADDRESS, 400);
   const conn = await isConnected();
   if (!conn.isConnected) throw new Error("Freighter not detected. Install the Freighter extension.");
   const access = await requestAccess();
@@ -39,6 +48,7 @@ export async function connectWallet(): Promise<string> {
 }
 
 export async function currentAddress(): Promise<string | null> {
+  if (demoEnabled()) return null; // require an explicit Connect click in the demo
   try {
     const res = await getAddress();
     return res.error ? null : res.address || null;
@@ -116,8 +126,16 @@ export async function invoke(
   return { hash: sent.hash, returnValue };
 }
 
+function denomFor(contractId: string): number {
+  return demoPools().find((p) => p.contractId === contractId)?.denom ?? 0;
+}
+
 /** deposit(from, commitment) — depositor signs and pays the pool's denomination. */
-export function deposit(contractId: string, from: string, commitmentHex: string) {
+export function deposit(contractId: string, from: string, commitmentHex: string): Promise<InvokeResult> {
+  if (demoEnabled()) {
+    const { hash } = demoRecordDeposit(denomFor(contractId));
+    return demoDelay({ hash, returnValue: null }, 900);
+  }
   return invoke(contractId, "deposit", [addressScVal(from), hexToScValBytes(commitmentHex)], from);
 }
 
@@ -127,7 +145,11 @@ export function withdraw(
   to: string,
   proofHex: string,
   publicHex: string,
-) {
+): Promise<InvokeResult> {
+  if (demoEnabled()) {
+    const { hash } = demoRecordWithdraw(denomFor(contractId));
+    return demoDelay({ hash, returnValue: null }, 1100);
+  }
   return invoke(
     contractId,
     "withdraw",

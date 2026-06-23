@@ -1,0 +1,24 @@
+# Keep Vercel uploads small — only the frontend in app/ is built/deployed.
+# Rust / circuit / service build artifacts and deps are not needed.
+target
+**/target
+Cargo.lock
+Cargo.toml
+circuits
+contract
+cli
+keeper
+monitor
+services
+sdk
+libs
+examples
+deployments
+scripts
+docs
+**/node_modules
+app/dist
+.git
+.claude
+.gstack
+*.wasm

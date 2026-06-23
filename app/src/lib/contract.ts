@@ -12,6 +12,7 @@ import {
   scValToNative,
 } from "@stellar/stellar-sdk";
 import { getSettings } from "./settings.ts";
+import { demoEnabled, demoPools, demoDelay, randomHex, DEMO_ADDRESS } from "./demo.ts";
 
 // A valid, funded testnet account used only as the simulation source (never signs,
 // never pays). Read-only `simulateTransaction` does not touch its balance.
@@ -90,6 +91,20 @@ export interface PoolOnChain {
 
 /** Read a full on-chain snapshot of one pool directly from the contract. */
 export async function readPool(contractId: string): Promise<PoolOnChain> {
+  if (demoEnabled()) {
+    const p = demoPools().find((x) => x.contractId === contractId) ?? demoPools()[0];
+    return demoDelay({
+      denom: BigInt(p.denom),
+      merkleRoot: randomHex(32),
+      commitmentCount: p.commitmentCount,
+      balance: BigInt(p.balanceStroops),
+      nullifierCount: p.nullifierCount,
+      rootHistory: Array.from({ length: 8 }, () => randomHex(32)),
+      admin: DEMO_ADDRESS,
+      associationRoot: randomHex(32),
+      hasAssociation: true,
+    } satisfies PoolOnChain, 650);
+  }
   const [denom, merkleRoot, commitmentCount, balance, nullifiers, rootHistory, admin, associationRoot, hasAssociation] =
     await Promise.all([
       getDenom(contractId),
