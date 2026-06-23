@@ -10,6 +10,9 @@ use soroban_sdk::{
 use lean_imt::{LeanIMT, TREE_DEPTH_KEY, TREE_LEAVES_KEY, TREE_ROOT_KEY};
 use zk::{Groth16Verifier, Proof, PublicSignals, VerificationKey};
 
+mod events;
+mod root_history;
+
 #[cfg(test)]
 mod test;
 
@@ -55,9 +58,7 @@ const DEFAULT_DENOM: i128 = 1000000000;
 /// representation that matches a circom/snarkjs public signal (`withdrawnValue`).
 /// The low 16 bytes carry the integer; the high 16 bytes are zero.
 fn denom_to_signal_bytes(env: &Env, denom: i128) -> BytesN<32> {
-    let mut be = [0u8; 32];
-    be[16..].copy_from_slice(&denom.to_be_bytes());
-    BytesN::from_array(env, &be)
+    BytesN::from_array(env, &veil_encoding::amount_to_be32(denom))
 }
 
 #[contract]
@@ -89,6 +90,10 @@ impl PrivacyPoolsContract {
         env.storage().instance().set(&TREE_LEAVES_KEY, &leaves);
         env.storage().instance().set(&TREE_DEPTH_KEY, &depth);
         env.storage().instance().set(&TREE_ROOT_KEY, &root);
+
+        // Seed the root-history window with the initial (empty-tree) root so the very
+        // first withdrawals validate against a known root.
+        root_history::push(env, root);
     }
 
     /// Stores a commitment in the merkle tree and updates the tree state
@@ -125,6 +130,10 @@ impl PrivacyPoolsContract {
         env.storage().instance().set(&TREE_LEAVES_KEY, &new_leaves);
         env.storage().instance().set(&TREE_DEPTH_KEY, &new_depth);
         env.storage().instance().set(&TREE_ROOT_KEY, &new_root);
+
+        // Record the new root so proofs generated against it remain valid for a window
+        // even as later deposits move the current root forward.
+        root_history::push(env, new_root.clone());
 
         Ok((new_root, leaf_index))
     }
@@ -168,7 +177,9 @@ impl PrivacyPoolsContract {
         token_client.transfer(&from, &env.current_contract_address(), &denom);
 
         // Store the commitment in the merkle tree
-        let (_, leaf_index) = Self::store_commitment(env, commitment)?;
+        let (new_root, leaf_index) = Self::store_commitment(env, commitment.clone())?;
+
+        events::deposit(env, &from, &commitment, leaf_index, &new_root);
 
         Ok(leaf_index)
     }
@@ -276,16 +287,12 @@ impl PrivacyPoolsContract {
             return vec![env, String::from_str(env, ERROR_NULLIFIER_USED)];
         }
 
-        // Verify state root matches
-        let state_root: BytesN<32> = env
-            .storage()
-            .instance()
-            .get(&TREE_ROOT_KEY)
-            .unwrap_or(BytesN::from_array(&env, &[0u8; 32]));
-
+        // Verify the proof's state root is one we've published recently. Accepting any
+        // root in the history window (not just the latest) lets a proof survive deposits
+        // that landed between proving and submission, without weakening soundness.
         let proof_root_bytes = proof_root.to_bytes();
 
-        if state_root != proof_root_bytes {
+        if !root_history::contains(env, &proof_root_bytes) {
             return vec![env, String::from_str(env, ERROR_COIN_OWNERSHIP_PROOF)];
         }
 
@@ -296,11 +303,13 @@ impl PrivacyPoolsContract {
         }
 
         // Add nullifier to used nullifiers only after all checks pass
-        nullifiers.push_back(nullifier);
+        nullifiers.push_back(nullifier.clone());
         env.storage().instance().set(&NULL_KEY, &nullifiers);
 
         // Transfer the asset from the contract to the recipient
         token_client.transfer(&env.current_contract_address(), &to, &denom);
+
+        events::withdraw(env, &to, &nullifier, denom);
 
         // Log success message as diagnostic event
         log!(&env, "{}", ERROR_WITHDRAW_SUCCESS);
@@ -314,6 +323,12 @@ impl PrivacyPoolsContract {
             .instance()
             .get(&TREE_ROOT_KEY)
             .unwrap_or(BytesN::from_array(&env, &[0u8; 32]))
+    }
+
+    /// Gets the recent root-history window (newest last). A withdrawal proof is valid
+    /// if its state root appears anywhere in here.
+    pub fn get_root_history(env: &Env) -> Vec<BytesN<32>> {
+        root_history::all(env)
     }
 
     /// Gets the current depth of the merkle tree
@@ -410,6 +425,7 @@ impl PrivacyPoolsContract {
         env.storage()
             .instance()
             .set(&ASSOCIATION_ROOT_KEY, &association_root);
+        events::association_root(env, &association_root);
         vec![env, String::from_str(env, SUCCESS_ASSOCIATION_ROOT_SET)]
     }
 

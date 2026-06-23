@@ -44,8 +44,7 @@ pub fn generate_commitment(
 /// value), which keeps large denominations (e.g. 1000 XLM = 1e12 stroops) correct
 /// — `U256::from_u32` would silently overflow above ~4.29 XLM.
 fn value_to_scalar(env: &Env, value_stroops: i128) -> BlsScalar {
-    let mut be = [0u8; 32];
-    be[16..].copy_from_slice(&value_stroops.to_be_bytes());
+    let be = veil_encoding::amount_to_be32(value_stroops);
     BlsScalar::from_u256(U256::from_be_bytes(env, &Bytes::from_slice(env, &be)))
 }
 

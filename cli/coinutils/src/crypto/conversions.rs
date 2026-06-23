@@ -1,21 +1,17 @@
 use crate::error::{CoinUtilsError, Result};
 use num_bigint::BigUint;
-use soroban_sdk::{crypto::bls12_381::Fr as BlsScalar, BytesN, Env, U256};
+use soroban_sdk::{crypto::bls12_381::Fr as BlsScalar, BytesN, Env};
 
 /// Convert a decimal string to a BlsScalar
 pub fn decimal_string_to_bls_scalar(env: &Env, decimal_str: &str) -> Result<BlsScalar> {
-    // For now, let's use a simpler approach that works with the existing system
-    // We'll convert the decimal to a u128 first, then to BlsScalar
-    if let Ok(value) = decimal_str.parse::<u128>() {
-        // Convert u128 to BlsScalar
-        return Ok(BlsScalar::from_u256(U256::from_u32(env, value as u32)));
-    }
+    // NOTE: there used to be a "fast path" here that did
+    // `U256::from_u32(env, value as u32)` for anything parseable as u128. That
+    // truncated to 32 bits, so any value above ~4.29e9 (e.g. a 10 XLM pool
+    // denomination = 1e10 stroops) was silently mangled and its recomputed
+    // commitment no longer matched the deposited one. The bignum path below is
+    // correct for every field element, so we always use it.
 
-    // For very large numbers, we need to handle them differently
-    // Since the decimal numbers are too large for u128, we'll use a workaround
-    // by converting through the existing hex conversion system
-
-    // First, let's try to convert the decimal to hex manually
+    // Convert the decimal to hex manually, digit by digit (base-10 -> base-16).
     let mut temp = decimal_str.to_string();
     let mut hex_digits = String::new();
 
@@ -80,7 +76,7 @@ pub fn bytes_to_decimal_string(bytes: &[u8; 32]) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use soroban_sdk::Env;
+    use soroban_sdk::{Env, U256};
 
     #[test]
     fn test_decimal_to_bls_scalar_conversion() {
