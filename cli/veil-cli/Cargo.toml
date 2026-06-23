@@ -1,0 +1,11 @@
+[package]
+name = "veil-cli"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[lib]
+doctest = false
+
+[dependencies]
+veil-utils = { path = "../../libs/veil-utils" }

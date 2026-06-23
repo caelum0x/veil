@@ -5,9 +5,11 @@ members = [
   "libs/lean-imt",
   "libs/zk",
   "libs/veil-encoding",
+  "libs/veil-utils",
   "cli/circom2soroban",
   "cli/coinutils",
   "cli/notetool",
+  "cli/veil-cli",
   "circuits/test/lean-imt-test",
   "circuits/test/poseidon-test"
 ]

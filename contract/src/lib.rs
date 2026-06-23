@@ -13,6 +13,14 @@ use zk::{Groth16Verifier, Proof, PublicSignals, VerificationKey};
 mod events;
 mod root_history;
 
+// Pure helper modules (no_std, core-only) — encoding, validation, pool math, and
+// Merkle index arithmetic. Public so they can be reused and don't warn as dead code.
+pub mod bits;
+pub mod checks;
+pub mod encoding;
+pub mod merkle_util;
+pub mod poolmath;
+
 #[cfg(test)]
 mod test;
 
