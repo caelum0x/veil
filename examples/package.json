@@ -1,0 +1,15 @@
+{
+  "name": "@veil/examples",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Runnable examples for the Veil SDK.",
+  "scripts": {
+    "list-pools": "tsx src/list-pools.ts",
+    "health": "tsx src/health.ts",
+    "pool-stats": "tsx src/pool-stats.ts",
+    "deposit-flow": "tsx src/deposit-flow.ts",
+    "withdraw-flow": "tsx src/withdraw-flow.ts",
+    "typecheck": "tsc --noEmit"
+  }
+}

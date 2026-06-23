@@ -1,0 +1,12 @@
+{
+  "name": "@veil/monitor",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Veil monitor — probes the relayer, indexer, and pools; serves a live health dashboard, Prometheus metrics, and a /health endpoint.",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "dev": "tsx watch src/index.ts",
+    "typecheck": "tsc --noEmit"
+  }
+}

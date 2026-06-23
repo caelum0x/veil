@@ -1,0 +1,12 @@
+{
+  "name": "@veil/sdk",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Veil SDK — TypeScript client for the Veil privacy pools on Stellar (relayer + indexer + note lifecycle).",
+  "main": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsc"
+  }
+}

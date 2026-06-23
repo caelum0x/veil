@@ -1,0 +1,12 @@
+{
+  "name": "@veil/keeper",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Veil keeper — background automation: association-set sync, root-history monitoring, work-state sweeps.",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "dev": "tsx watch src/index.ts",
+    "typecheck": "tsc --noEmit"
+  }
+}
